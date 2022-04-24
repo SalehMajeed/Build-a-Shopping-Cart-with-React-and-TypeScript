@@ -3,6 +3,7 @@ import { useQuery } from "react-query";
 
 // Components
 import Item from "./Item/item";
+import Cart from "./Cart/Cart";
 import { Drawer } from "@material-ui/core";
 import { LinearProgress } from "@material-ui/core";
 import { Grid } from "@material-ui/core";
@@ -34,22 +35,45 @@ const App = () => {
   console.log(data);
 
   const getTotalItem = (items: CartItemType[]) => {
-    items.reduce((ack:number, item) => ack + item.amount ,0);
+    return items.reduce((ack:number, item) => ack + item.amount ,0);
   };
 
-  const handlAddToCart = (clickedItem: CartItemType) => {}
+  const handlAddToCart = (clickedItem: CartItemType) => {
+    setCartItem(prevState => {
+      const isItemInCart = prevState.find(item => item.id === clickedItem.id)
 
-  const handleRemoeFromCart = () => {}
+      if (isItemInCart) {
+        return prevState.map(item => (
+          item.id === clickedItem.id ? {...item, amount: item.amount + 1}
+          : item
+        ))
+      }
+      return [...prevState, {...clickedItem, amout:1}]
+    })
+  }
+
+  const handleRemoeFromCart = (id: number) => {
+    setCartItem(prevState => (
+      prevState.reduce((ack, item) => {
+        if(item.id === id) {
+          if(item.amount === 1) return ack;
+          return [...ack, {...item, amount: item.amount - 1}];
+        } else {
+          return [...ack, item];
+        }
+      }, [] as CartItemType[])
+    ))
+  }
 
   if(isLoading) return <LinearProgress />
   if (error) return <div>Something went wrong...</div>
   return (
     <Wrapper>
       <Drawer anchor="right" open={cartOpen} onClose={() => setCartOpen(false)}>
-        Cart goes here
+        <Cart cartItems={cartItem} addToCart={handlAddToCart} removeFromCart={handleRemoeFromCart} />
       </Drawer>
       <StyledButton onClick={() => setCartOpen(true)}>
-        <Badge badgeContent={getTotalItem(cartItem)} color="error">
+        <Badge badgeContent={getTotalItem(cartItem)} color='error'>
           <AddShoppingCartIcon />
         </Badge>
       </StyledButton>
